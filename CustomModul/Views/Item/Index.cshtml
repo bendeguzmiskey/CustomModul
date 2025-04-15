@@ -1,32 +1,39 @@
-﻿@inherits DotNetNuke.Web.Mvc.Framework.DnnWebViewPage<IEnumerable<CustomModul.CustomModul.Models.Item>>
-
-@using System.Text.RegularExpressions
+﻿@inherits DotNetNuke.Web.Mvc.Framework.DnnWebViewPage
 @using DotNetNuke.Web.Mvc.Helpers
 
 <div id="Items-@Dnn.ModuleContext.ModuleId">
-    @if (Model.Count() == 0)
-    {
-        <p>@Dnn.LocalizeString("NoItems")</p>
-    }
-    else
-    {
-        <ul class="tm_tl">
-            @foreach (var item in Model)
-            {
-                <li class="tm_t">
-                    <h3>@item.ItemName</h3>
-                    <div class="tm_td">@item.ItemDescription</div>
-                    @{
-                        if (Dnn.ModuleContext.IsEditable)
-                        {
-                            <div>
-                                <a href="@Url.Action("Edit", "Item", new {ctl = "Edit", itemId = item.ItemId})">@Dnn.LocalizeString("EditItem")</a>
-                                <a href="@Url.Action("Delete", "Item", new {itemId = item.ItemId})">@Dnn.LocalizeString("DeleteItem")</a>
-                            </div>
-                        }
-                    }
-                </li>
-            }
-        </ul>
-    }
+    <h2>Dummy API Values</h2>
+    <button id="fetch-btn">Fetch Values</button>
+    <ul id="value-list"></ul>
 </div>
+
+@section Scripts {
+    <script type="text/javascript">
+        document.getElementById("fetch-btn").addEventListener("click", function (event) {
+            event.preventDefault();  // Prevent page reload
+
+            fetch('/DesktopModules/CustomModul/API/CustomApi/Get')
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById("value-list");
+                    list.innerHTML = "";  // Clear old items
+
+                    if (Array.isArray(data)) {
+                        data.forEach(item => {
+                            const li = document.createElement("li");
+                            li.textContent = item;
+                            list.appendChild(li);
+                        });
+                    } else if (data.error) {
+                        const li = document.createElement("li");
+                        li.textContent = "Error: " + data.error;
+                        list.appendChild(li);
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                });
+        });
+    </script>
+}
+

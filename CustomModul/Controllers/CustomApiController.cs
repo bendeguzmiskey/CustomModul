@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 using DotNetNuke.Web.Api;
+using Newtonsoft.Json;
 
 namespace CustomModul.CustomModul.Controllers
 {
@@ -16,7 +17,12 @@ namespace CustomModul.CustomModul.Controllers
             try
             {
                 var values = new string[] { "value1", "value2" };
-                return Request.CreateResponse(HttpStatusCode.OK, values);
+
+                // Ensure the content type is explicitly set to JSON
+                var response = Request.CreateResponse(HttpStatusCode.OK, values);
+                response.Content = new StringContent(JsonConvert.SerializeObject(values), System.Text.Encoding.UTF8, "application/json");
+
+                return response;
             }
             catch (Exception ex)
             {
