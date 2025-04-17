@@ -2,38 +2,146 @@
 @using DotNetNuke.Web.Mvc.Helpers
 
 <div id="Items-@Dnn.ModuleContext.ModuleId">
-    <h2>Dummy API Values</h2>
-    <button id="fetch-btn">Fetch Values</button>
-    <ul id="value-list"></ul>
+    <h2>Animal Recognition</h2>
+    <input type="file" id="image-upload" accept="image/*" />
+    <button id="analyze-btn" disabled>Analyze Image</button>
+    <div id="preview" style="margin: 10px 0;">
+        <img id="image-preview" style="max-width: 300px; display: none;" />
+    </div>
+    <div id="result" style="margin-top: 10px;"></div>
+    <div id="products" style="margin-top: 20px;">
+        <div id="product-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;"></div>
+        <div id="pagination" style="margin-top: 20px; text-align: center;">
+            <button id="prev-page" disabled>Previous</button>
+            <span id="page-info"></span>
+            <button id="next-page" disabled>Next</button>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     <script type="text/javascript">
-        document.getElementById("fetch-btn").addEventListener("click", function (event) {
-            event.preventDefault();  // Prevent page reload
+        // Handle image upload and preview
+        const imageUpload = document.getElementById("image-upload");
+        const imagePreview = document.getElementById("image-preview");
+        const analyzeBtn = document.getElementById("analyze-btn");
+        const productGrid = document.getElementById("product-grid");
+        const prevPageBtn = document.getElementById("prev-page");
+        const nextPageBtn = document.getElementById("next-page");
+        const pageInfo = document.getElementById("page-info");
 
-            fetch('/DesktopModules/CustomModul/API/CustomApi/Get')
+        let currentPage = 1;
+        let totalPages = 1;
+        let products = [];
+        const itemsPerPage = 8; // 4x2 grid
+
+        imageUpload.addEventListener("change", function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = "block";
+                    analyzeBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = "none";
+                analyzeBtn.disabled = true;
+            }
+        });
+
+        // Function to render products for current page
+        function renderProducts() {
+            productGrid.innerHTML = '';
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, products.length);
+
+            for (let i = startIndex; i < endIndex; i++) {
+                const product = products[i];
+                const productDiv = document.createElement('div');
+                productDiv.style.border = '1px solid #ddd';
+                productDiv.style.padding = '10px';
+                productDiv.style.textAlign = 'center';
+                productDiv.innerHTML = `
+                        <a href="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Product-Details/${product.Sku}" style="text-decoration: none; color: inherit;">
+                            <img src="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Portals/0/Hotcakes/Data/products/${product.Bvin}/medium/${product.ImageFileMedium}" style="max-width: 100%; height: auto; margin-bottom: 10px;" alt="${product.ProductName}" />
+                            <h3 style="font-size: 14px; margin: 5px 0;">${product.ProductName}</h3>
+                            <p style="color: green; margin: 5px 0;">$${product.SitePrice.toFixed(2)}</p>
+                            <p style="font-size: 12px; color: #666; margin: 5px 0;">SKU: ${product.Sku}</p>
+                        </a>
+                    `;
+                productGrid.appendChild(productDiv);
+            }
+
+            // Update pagination controls
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages;
+        }
+
+        // Handle pagination
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderProducts();
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderProducts();
+            }
+        });
+
+        // Handle image analysis
+        analyzeBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+            const file = imageUpload.files[0];
+            if (!file) {
+                document.getElementById("result").innerHTML = "Please select an image.";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("image", file);
+
+            fetch('http://localhost:8000/analyze', {
+                method: 'POST',
+                body: formData
+            })
                 .then(response => response.json())
                 .then(data => {
-                    const list = document.getElementById("value-list");
-                    list.innerHTML = "";  // Clear old items
-
-                    if (Array.isArray(data)) {
-                        data.forEach(item => {
-                            const li = document.createElement("li");
-                            li.textContent = item;
-                            list.appendChild(li);
-                        });
-                    } else if (data.error) {
-                        const li = document.createElement("li");
-                        li.textContent = "Error: " + data.error;
-                        list.appendChild(li);
+                    const resultDiv = document.getElementById("result");
+                    if (data.error) {
+                        resultDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                        productGrid.innerHTML = '';
+                        prevPageBtn.disabled = true;
+                        nextPageBtn.disabled = true;
+                        pageInfo.textContent = '';
+                    } else if (data.categories && data.categories.length > 0) {
+                        products = data.categories;
+                        totalPages = Math.ceil(products.length / itemsPerPage);
+                        currentPage = 1;
+                        resultDiv.innerHTML = `<p>✅ Found ${products.length} products</p>`;
+                        renderProducts();
+                    } else {
+                        resultDiv.innerHTML = `<p>❌ No matching products found.</p>`;
+                        productGrid.innerHTML = '';
+                        prevPageBtn.disabled = true;
+                        nextPageBtn.disabled = true;
+                        pageInfo.textContent = '';
                     }
                 })
                 .catch(err => {
                     console.error('Error:', err);
+                    document.getElementById("result").innerHTML = `<p style="color: red;">Error: Failed to analyze image.</p>`;
+                    productGrid.innerHTML = '';
+                    prevPageBtn.disabled = true;
+                    nextPageBtn.disabled = true;
+                    pageInfo.textContent = '';
                 });
         });
     </script>
 }
-
