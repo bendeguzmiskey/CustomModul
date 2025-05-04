@@ -1,27 +1,197 @@
 ﻿@inherits DotNetNuke.Web.Mvc.Framework.DnnWebViewPage
 @using DotNetNuke.Web.Mvc.Helpers
 
+<style>
+    /* Global styles */
+    #Items-@Dnn.ModuleContext.ModuleId {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: 'Arial', sans-serif;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    /* Upload and button styles */
+    #image-upload, #analyze-btn {
+        display: inline-block;
+        margin: 10px 5px;
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    #image-upload {
+        border: 2px solid #007bff;
+        background-color: #fff;
+        color: #007bff;
+    }
+
+    #image-upload:hover {
+        background-color: #007bff;
+        color: #fff;
+    }
+
+    #analyze-btn {
+        background-color: #ff8080;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+    }
+
+    #analyze-btn:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    #analyze-btn:hover:not(:disabled) {
+        background-color: #218838;
+        transform: translateY(-2px);
+    }
+
+    /* Preview image */
+    #preview {
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    #image-preview {
+        max-width: 300px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Result message */
+    #result {
+        text-align: center;
+        font-size: 18px;
+        margin: 20px 0;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    #result p {
+        margin: 0;
+    }
+
+    /* Product grid */
+    #product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    #product-grid > div {
+        background-color: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #product-grid > div:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    #product-grid img {
+        max-width: 100%;
+        height: 150px;
+        object-fit: contain;
+        margin-bottom: 10px;
+        border-radius: 5px;
+    }
+
+    #product-grid h3 {
+        font-size: 16px;
+        color: #333;
+        margin: 10px 0;
+        font-weight: 600;
+    }
+
+    #product-grid p.price {
+        color: #28a745;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 5px 0;
+    }
+
+    #product-grid p.sku {
+        color: #6c757d;
+        font-size: 12px;
+        margin: 5px 0;
+    }
+
+    /* Pagination */
+    #pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    #pagination button {
+        padding: 8px 16px;
+        border: none;
+        background-color: #470000;
+        color: #fff;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    #pagination button:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    #pagination button:hover:not(:disabled) {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    #page-info {
+        font-size: 16px;
+        color: #333;
+    }
+
+
+</style>
+
 <div id="Items-@Dnn.ModuleContext.ModuleId">
-    <h2>Animal Recognition</h2>
+    <h2>Állatfelismerés</h2>
     <input type="file" id="image-upload" accept="image/*" />
-    <button id="analyze-btn" disabled>Analyze Image</button>
-    <div id="preview" style="margin: 10px 0;">
-        <img id="image-preview" style="max-width: 300px; display: none;" />
+    <button id="analyze-btn" disabled>Elemzés indítása</button>
+    <div id="preview">
+        <img id="image-preview" style="display: none;" />
     </div>
-    <div id="result" style="margin-top: 10px;"></div>
-    <div id="products" style="margin-top: 20px;">
-        <div id="product-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;"></div>
-        <div id="pagination" style="margin-top: 20px; text-align: center;">
-            <button id="prev-page" disabled>Previous</button>
+    <div id="result"></div>
+    <div id="products">
+        <div id="product-grid"></div>
+        <div id="pagination">
+            <button id="prev-page" disabled>Előző</button>
             <span id="page-info"></span>
-            <button id="next-page" disabled>Next</button>
+            <button id="next-page" disabled>Következő</button>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script type="text/javascript">
-        // Handle image upload and preview
         const imageUpload = document.getElementById("image-upload");
         const imagePreview = document.getElementById("image-preview");
         const analyzeBtn = document.getElementById("analyze-btn");
@@ -33,7 +203,7 @@
         let currentPage = 1;
         let totalPages = 1;
         let products = [];
-        const itemsPerPage = 8; // 4x2 grid
+        const itemsPerPage = 8;
 
         imageUpload.addEventListener("change", function (event) {
             const file = event.target.files[0];
@@ -51,7 +221,6 @@
             }
         });
 
-        // Function to render products for current page
         function renderProducts() {
             productGrid.innerHTML = '';
             const startIndex = (currentPage - 1) * itemsPerPage;
@@ -60,27 +229,22 @@
             for (let i = startIndex; i < endIndex; i++) {
                 const product = products[i];
                 const productDiv = document.createElement('div');
-                productDiv.style.border = '1px solid #ddd';
-                productDiv.style.padding = '10px';
-                productDiv.style.textAlign = 'center';
                 productDiv.innerHTML = `
                         <a href="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Product-Details/${product.Sku}" style="text-decoration: none; color: inherit;">
-                            <img src="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Portals/0/Hotcakes/Data/products/${product.Bvin}/medium/${product.ImageFileMedium}" style="max-width: 100%; height: auto; margin-bottom: 10px;" alt="${product.ProductName}" />
-                            <h3 style="font-size: 14px; margin: 5px 0;">${product.ProductName}</h3>
-                            <p style="color: green; margin: 5px 0;">$${product.SitePrice.toFixed(2)}</p>
-                            <p style="font-size: 12px; color: #666; margin: 5px 0;">SKU: ${product.Sku}</p>
+                            <img src="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Portals/0/Hotcakes/Data/products/${product.Bvin}/medium/${product.ImageFileMedium}" alt="${product.ProductName}" onerror="this.src='https://via.placeholder.com/150';" />
+                            <h3>${product.ProductName}</h3>
+                            <p class="price">${product.SitePrice.toFixed(2)} Ft</p>
+                            <p class="sku">Cikkszám: ${product.Sku}</p>
                         </a>
                     `;
                 productGrid.appendChild(productDiv);
             }
 
-            // Update pagination controls
-            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            pageInfo.textContent = `Oldal ${currentPage} / ${totalPages}`;
             prevPageBtn.disabled = currentPage === 1;
             nextPageBtn.disabled = currentPage === totalPages;
         }
 
-        // Handle pagination
         prevPageBtn.addEventListener('click', () => {
             if (currentPage > 1) {
                 currentPage--;
@@ -95,48 +259,51 @@
             }
         });
 
-        // Handle image analysis
         analyzeBtn.addEventListener("click", function (event) {
             event.preventDefault();
             const file = imageUpload.files[0];
+            const resultDiv = document.getElementById("result");
+
             if (!file) {
-                document.getElementById("result").innerHTML = "Please select an image.";
+                resultDiv.innerHTML = `<p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">📌 Kérlek, válassz ki egy képet az elemzéshez.</p>`;
                 return;
             }
 
             const formData = new FormData();
             formData.append("image", file);
 
-            fetch('http://localhost:8000/analyze', {
+            fetch('http://rendfejl1003.northeurope.cloudapp.azure.com:8000/analyze', {
                 method: 'POST',
                 body: formData
             })
                 .then(response => response.json())
                 .then(data => {
-                    const resultDiv = document.getElementById("result");
-                    if (data.error) {
-                        resultDiv.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
-                        productGrid.innerHTML = '';
-                        prevPageBtn.disabled = true;
-                        nextPageBtn.disabled = true;
-                        pageInfo.textContent = '';
-                    } else if (data.categories && data.categories.length > 0) {
+                    productGrid.innerHTML = '';
+                    prevPageBtn.disabled = true;
+                    nextPageBtn.disabled = true;
+                    pageInfo.textContent = '';
+
+                    if (data.error || (data.categories && data.categories.error)) {
+                        let labels = (data.categories && data.categories.detected_labels) || [];
+                        const labelList = labels.length > 0 ? `<p>🔍 Felismert címkék: ${labels.join(', ')}</p>` : '';
+                        resultDiv.innerHTML = `
+            <p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">
+                ❌ ${data.error || data.categories.error}<br/>
+                ${labelList}
+            </p>`;
+                    } else if (Array.isArray(data.categories) && data.categories.length > 0) {
                         products = data.categories;
                         totalPages = Math.ceil(products.length / itemsPerPage);
                         currentPage = 1;
-                        resultDiv.innerHTML = `<p>✅ Found ${products.length} products</p>`;
+                        resultDiv.innerHTML = `<p style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px;">✅ ${products.length} termék található.</p>`;
                         renderProducts();
                     } else {
-                        resultDiv.innerHTML = `<p>❌ No matching products found.</p>`;
-                        productGrid.innerHTML = '';
-                        prevPageBtn.disabled = true;
-                        nextPageBtn.disabled = true;
-                        pageInfo.textContent = '';
+                        resultDiv.innerHTML = `<p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">❌ Nem található megfelelő termék.</p>`;
                     }
                 })
                 .catch(err => {
                     console.error('Error:', err);
-                    document.getElementById("result").innerHTML = `<p style="color: red;">Error: Failed to analyze image.</p>`;
+                    resultDiv.innerHTML = `<p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">⚠️ Hiba: az elemzés nem sikerült.</p>`;
                     productGrid.innerHTML = '';
                     prevPageBtn.disabled = true;
                     nextPageBtn.disabled = true;
