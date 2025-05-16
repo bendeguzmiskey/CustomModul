@@ -44,7 +44,7 @@
     }
 
     #analyze-btn {
-        laboratori background-color: #ff8080;
+        background-color: #ff8080;
         color: #fff;
         border: none;
         padding: 10px 20px;
@@ -196,51 +196,87 @@
     #slot-machine {
         margin-top: 40px;
         padding: 20px;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(145deg, #e0e0e0, #ffffff);
+        border-radius: 15px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2), inset 0 0 10px rgba(0, 0, 0, 0.1);
         text-align: center;
+        border: 4px solid #470000;
+        position: relative;
+        overflow: hidden;
+    }
+
+    #slot-machine::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to bottom, #470000, #6c0000);
+    }
+
+    #slot-machine::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to top, #470000, #6c0000);
     }
 
     #reels {
         display: flex;
         justify-content: center;
-        gap: 10px;
-        margin-bottom: 20px;
+        gap: 15px;
+        margin: 20px 0;
+        background: #333;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
     }
 
     .reel {
         width: 100px;
         height: 100px;
-        line-height: 100px;
-        font-size: 48px;
+        overflow: hidden;
+        position: relative;
         border: 2px solid #007bff;
         border-radius: 5px;
-        background-color: #f8f9fa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        background-color: #fff;
+    }
+
+    .reel-inner {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 48px;
+        line-height: 100px;
+        transition: transform 0.1s linear;
     }
 
     #spin-btn {
-        padding: 10px 20px;
-        font-size: 16px;
-        border-radius: 5px;
+        padding: 12px 24px;
+        font-size: 18px;
+        border-radius: 8px;
         border: none;
-        background-color: #ff8080;
+        background: linear-gradient(to right, #ff8080, #ff4d4d);
         color: #fff;
         cursor: pointer;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
 
     #spin-btn:hover:not(:disabled) {
-        background-color: #218838;
+        background: linear-gradient(to right, #218838, #1e7e34);
         transform: translateY(-2px);
     }
 
     #spin-btn:disabled {
-        background-color: #6c757d;
+        background: #6c757d;
         cursor: not-allowed;
+        box-shadow: none;
     }
 
     #slot-result {
@@ -279,9 +315,9 @@
     <div id="slot-machine">
         <h2>Állatos Szerencsejáték</h2>
         <div id="reels">
-            <div class="reel" id="reel1">🐶</div>
-            <div class="reel" id="reel2">🐱</div>
-            <div class="reel" id="reel3">🐰</div>
+            <div class="reel" id="reel1"><div class="reel-inner" id="reel1-inner">🐶</div></div>
+            <div class="reel" id="reel2"><div class="reel-inner" id="reel2-inner">🐱</div></div>
+            <div class="reel" id="reel3"><div class="reel-inner" id="reel3-inner">🐰</div></div>
         </div>
         <button id="spin-btn">Pörgetés</button>
         <div id="slot-result"></div>
@@ -439,9 +475,9 @@
         });
 
         // Slot Machine Script
-        const reel1 = document.getElementById("reel1");
-        const reel2 = document.getElementById("reel2");
-        const reel3 = document.getElementById("reel3");
+        const reel1Inner = document.getElementById("reel1-inner");
+        const reel2Inner = document.getElementById("reel2-inner");
+        const reel3Inner = document.getElementById("reel3-inner");
         const spinBtn = document.getElementById("spin-btn");
         const slotResult = document.getElementById("slot-result");
 
@@ -454,24 +490,44 @@
             spinBtn.disabled = true;
             slotResult.innerHTML = '';
 
-            let spins = 20;
-            let interval = setInterval(() => {
-                reel1.textContent = animals[Math.floor(Math.random() * animals.length)];
-                reel2.textContent = animals[Math.floor(Math.random() * animals.length)];
-                reel3.textContent = animals[Math.floor(Math.random() * animals.length)];
-                spins--;
-                if (spins <= 0) {
-                    clearInterval(interval);
-                    checkWin();
-                    isSpinning = false;
-                    spinBtn.disabled = false;
-                }
-            }, 100);
+            const spins = 20;
+            let currentSpin = 0;
+
+            function animateReel(reelInner, delay) {
+                let position = 0;
+                const speed = 50; // ms per frame
+                const totalDuration = 2000 + delay; // Base duration + stagger
+                const interval = setInterval(() => {
+                    position -= 100; // Move up by one symbol height
+                    reelInner.style.transform = `translateY(${position}px)`;
+                    reelInner.textContent = animals[Math.floor(Math.random() * animals.length)];
+                    currentSpin++;
+                    if (currentSpin >= spins) {
+                        clearInterval(interval);
+                        // Snap to final position
+                        reelInner.style.transition = 'transform 0.3s ease-out';
+                        reelInner.style.transform = 'translateY(0)';
+                        setTimeout(() => {
+                            reelInner.style.transition = 'transform 0.1s linear';
+                            if (reelInner === reel3Inner) {
+                                checkWin();
+                                isSpinning = false;
+                                spinBtn.disabled = false;
+                            }
+                        }, 300);
+                    }
+                }, speed);
+            }
+
+            // Stagger the reels for a more realistic effect
+            animateReel(reel1Inner, 0);
+            animateReel(reel2Inner, 200);
+            animateReel(reel3Inner, 400);
         }
 
         function checkWin() {
-            if (reel1.textContent === reel2.textContent && reel2.textContent === reel3.textContent) {
-                slotResult.innerHTML = `<p style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px;">🎉 Nyertél! Három egyforma: ${reel1.textContent}</p>`;
+            if (reel1Inner.textContent === reel2Inner.textContent && reel2Inner.textContent === reel3Inner.textContent) {
+                slotResult.innerHTML = `<p style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px;">🎉 Nyertél! Három egyforma: ${reel1Inner.textContent}</p>`;
             } else {
                 slotResult.innerHTML = `<p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">😔 Nem nyertél, próbáld újra!</p>`;
             }
