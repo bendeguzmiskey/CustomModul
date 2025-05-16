@@ -434,6 +434,18 @@
         margin: 10px 0;
     }
 
+    .badge {
+        display: inline-block;
+        padding: 0.25em 0.6em;
+        margin: 0 5px 5px 0;
+        font-size: 0.85em;
+        font-weight: 600;
+        color: white;
+        background-color: #007bff;
+        border-radius: 0.25rem;
+        user-select: none;
+    }
+
 </style>
 
 <div id="Items-@Dnn.ModuleContext.ModuleId">
@@ -602,12 +614,15 @@
                     pageInfo.textContent = '';
 
                     let labels = data.detected_labels || [];
-                    const labelList = labels.length > 0 ? `<p>🔍 Felismert címkék: ${labels.join(', ')}</p>` : '';
+                    const labelBadges = labels.map(label =>
+                        `<span class="badge">${label}</span>`
+                    ).join(' ');
+                    const labelList = labelBadges.length > 0 ? `<p>🔍 Felismert címkék: ${labelBadges}</p>` : '';
 
-                    if (data.error) {
+                    if (data.error || (data.categories && data.categories.error)) {
                         resultDiv.innerHTML = `
                             <p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">
-                                ❌ ${data.error}<br/>
+                                ❌ ${data.error || data.categories.error}<br/>
                                 ${labelList}
                             </p>`;
                     } else if (Array.isArray(data.products) && data.products.length > 0) {
@@ -619,7 +634,7 @@
                                 ✅ ${products.length} termék található.<br/>
                                 ${labelList}
                             </p>`;
-                                renderProducts();
+                        renderProducts();
                     } else {
                         resultDiv.innerHTML = `
                             <p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">
@@ -632,6 +647,7 @@
                     console.error('Error:', error);
                     resultDiv.innerHTML = `<p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">❌ Hiba történt az elemzés során.</p>`;
                 });
+
         });
 
         // Slot Machine Script
