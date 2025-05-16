@@ -60,6 +60,29 @@
         transform: translateY(-2px);
     }
 
+    /* Drag and drop area */
+    .drop-area {
+        border: 2px dashed #007bff;
+        padding: 20px;
+        text-align: center;
+        margin: 10px 0;
+        border-radius: 5px;
+        background-color: #fff;
+        transition: all 0.3s ease;
+    }
+
+    .drop-area.drag-over {
+        background-color: #e6f3ff;
+        border-color: #0056b3;
+        transform: scale(1.02);
+    }
+
+    .drop-area p {
+        margin: 0;
+        color: #333;
+        font-size: 16px;
+    }
+
     /* Preview image */
     #preview {
         text-align: center;
@@ -168,13 +191,14 @@
         font-size: 16px;
         color: #333;
     }
-
-
 </style>
 
 <div id="Items-@Dnn.ModuleContext.ModuleId">
     <h2>Állatfelismerés</h2>
-    <input type="file" id="image-upload" accept="image/*" />
+    <div class="drop-area" id="drop-area">
+        <p>Húzd ide a képet, vagy válassz fájlt</p>
+        <input type="file" id="image-upload" accept="image/*" />
+    </div>
     <button id="analyze-btn" disabled>Elemzés indítása</button>
     <div id="preview">
         <img id="image-preview" style="display: none;" />
@@ -199,14 +223,15 @@
         const prevPageBtn = document.getElementById("prev-page");
         const nextPageBtn = document.getElementById("next-page");
         const pageInfo = document.getElementById("page-info");
+        const dropArea = document.getElementById("drop-area");
 
         let currentPage = 1;
         let totalPages = 1;
         let products = [];
         const itemsPerPage = 8;
 
-        imageUpload.addEventListener("change", function (event) {
-            const file = event.target.files[0];
+        // Handle file selection (both click and drag)
+        function handleFile(file) {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
@@ -219,6 +244,31 @@
                 imagePreview.style.display = "none";
                 analyzeBtn.disabled = true;
             }
+        }
+
+        // File input change event
+        imageUpload.addEventListener("change", function (event) {
+            handleFile(event.target.files[0]);
+        });
+
+        // Drag and drop events
+        dropArea.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            dropArea.classList.add("drag-over");
+        });
+
+        dropArea.addEventListener("dragleave", () => {
+            dropArea.classList.remove("drag-over");
+        });
+
+        dropArea.addEventListener("drop", (event) => {
+            event.preventDefault();
+            dropArea.classList.remove("drag-over");
+            const file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith("image/")) {
+                imageUpload.files = event.dataTransfer.files;
+                handleFile(file);
+            }
         });
 
         function renderProducts() {
@@ -230,13 +280,13 @@
                 const product = products[i];
                 const productDiv = document.createElement('div');
                 productDiv.innerHTML = `
-                        <a href="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Product-Details/${product.Sku}" style="text-decoration: none; color: inherit;">
-                            <img src="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Portals/0/Hotcakes/Data/products/${product.Bvin}/medium/${product.ImageFileMedium}" alt="${product.ProductName}" onerror="this.src='https://via.placeholder.com/150';" />
-                            <h3>${product.ProductName}</h3>
-                            <p class="price">${product.SitePrice.toFixed(2)} Ft</p>
-                            <p class="sku">Cikkszám: ${product.Sku}</p>
-                        </a>
-                    `;
+                            <a href="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Product-Details/${product.Sku}" style="text-decoration: none; color: inherit;">
+                                <img src="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Portals/0/Hotcakes/Data/products/${product.Bvin}/medium/${product.ImageFileMedium}" alt="${product.ProductName}" onerror="this.src='https://via.placeholder.com/150';" />
+                                <h3>${product.ProductName}</h3>
+                                <p class="price">${product.SitePrice.toFixed(2)} Ft</p>
+                                <p class="sku">Cikkszám: ${product.Sku}</p>
+                            </a>
+                        `;
                 productGrid.appendChild(productDiv);
             }
 
@@ -283,32 +333,34 @@
                     nextPageBtn.disabled = true;
                     pageInfo.textContent = '';
 
+                    let labels = (data.categories && data.categories.detected_labels) || data.detected_labels || [];
+
+                    const labelList = labels.length > 0 ? `<p>🔍 Felismert címkék: ${labels.join(', ')}</p>` : '';
+
                     if (data.error || (data.categories && data.categories.error)) {
-                        let labels = (data.categories && data.categories.detected_labels) || [];
-                        const labelList = labels.length > 0 ? `<p>🔍 Felismert címkék: ${labels.join(', ')}</p>` : '';
                         resultDiv.innerHTML = `
-            <p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">
-                ❌ ${data.error || data.categories.error}<br/>
-                ${labelList}
-            </p>`;
+                <p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">
+                    ❌ ${data.error || data.categories.error}<br/>
+                    ${labelList}
+                </p>`;
                     } else if (Array.isArray(data.categories) && data.categories.length > 0) {
                         products = data.categories;
                         totalPages = Math.ceil(products.length / itemsPerPage);
                         currentPage = 1;
-                        resultDiv.innerHTML = `<p style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px;">✅ ${products.length} termék található.</p>`;
+                        resultDiv.innerHTML = `
+                <p style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px;">
+                    ✅ ${products.length} termék található.<br/>
+                    ${labelList}
+                </p>`;
                         renderProducts();
                     } else {
-                        resultDiv.innerHTML = `<p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">❌ Nem található megfelelő termék.</p>`;
+                        resultDiv.innerHTML = `
+                <p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">
+                    ❌ Nem található megfelelő termék.<br/>
+                    ${labelList}
+                </p>`;
                     }
                 })
-                .catch(err => {
-                    console.error('Error:', err);
-                    resultDiv.innerHTML = `<p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">⚠️ Hiba: az elemzés nem sikerült.</p>`;
-                    productGrid.innerHTML = '';
-                    prevPageBtn.disabled = true;
-                    nextPageBtn.disabled = true;
-                    pageInfo.textContent = '';
-                });
         });
     </script>
 }
