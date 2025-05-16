@@ -291,6 +291,149 @@
         margin: 0;
     }
 
+
+    /* Blackjack styles */
+    #blackjack {
+        margin-top: 40px;
+        padding: 20px;
+        background: linear-gradient(145deg, #e0e0e0, #ffffff);
+        border-radius: 15px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        border: 4px solid #470000;
+        position: relative;
+    }
+
+    #blackjack::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to bottom, #470000, #6c0000);
+    }
+
+    #blackjack::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to top, #470000, #6c0000);
+    }
+
+    #dealer-hand, #player-hand {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+        min-height: 120px;
+    }
+
+    .card {
+        width: 80px;
+        height: 120px;
+        background: #fff;
+        border: 2px solid #333;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #000;
+        position: relative;
+        transition: transform 0.5s ease, opacity 0.5s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .card.deal {
+        transform: translateY(-200px) rotate(10deg);
+        opacity: 0;
+    }
+
+    .card.reveal {
+        transform: translateY(0) rotate(0);
+        opacity: 1;
+    }
+
+    .card.back {
+        background: linear-gradient(45deg, #470000, #6c0000);
+        color: transparent;
+    }
+
+    .card .suit {
+        position: absolute;
+        font-size: 18px;
+    }
+
+    .card .suit.top-left {
+        top: 5px;
+        left: 5px;
+    }
+
+    .card .suit.bottom-right {
+        bottom: 5px;
+        right: 5px;
+        transform: rotate(180deg);
+    }
+
+    .card.hearts, .card.diamonds {
+        color: #e63946;
+    }
+
+    .card.spades, .card.clubs {
+        color: #000;
+    }
+
+    #blackjack-controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+    }
+
+    #hit-btn, #stand-btn, #new-game-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: none;
+        background: linear-gradient(to right, #ff8080, #ff4d4d);
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    #hit-btn:hover:not(:disabled), #stand-btn:hover:not(:disabled), #new-game-btn:hover:not(:disabled) {
+        background: linear-gradient(to right, #218838, #1e7e34);
+        transform: translateY(-2px);
+    }
+
+    #hit-btn:disabled, #stand-btn:disabled, #new-game-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    #blackjack-result {
+        margin-top: 20px;
+        font-size: 18px;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    #blackjack-result p {
+        margin: 0;
+    }
+
+    #player-score, #dealer-score {
+        font-size: 16px;
+        color: #333;
+        margin: 10px 0;
+    }
+
 </style>
 
 <div id="Items-@Dnn.ModuleContext.ModuleId">
@@ -324,6 +467,21 @@
         <button id="spin-btn">Pörgetés</button>
         <div id="slot-result"></div>
     </div>
+
+    <!-- Blackjack -->
+    <div id="blackjack">
+        <h2>Blackjack</h2>
+        <div id="dealer-hand"></div>
+        <p id="dealer-score"></p>
+        <div id="player-hand"></div>
+        <p id="player-score"></p>
+        <div id="blackjack-controls">
+            <button id="hit-btn" disabled>Húzás</button>
+            <button id="stand-btn" disabled>Állj</button>
+            <button id="new-game-btn">Új játék</button>
+        </div>
+        <div id="blackjack-result"></div>
+    </div>
 </div>
 
 @section Scripts {
@@ -343,7 +501,6 @@
         let products = [];
         const itemsPerPage = 8;
 
-        // Handle file selection (both click and drag)
         function handleFile(file) {
             if (file) {
                 const reader = new FileReader();
@@ -359,12 +516,10 @@
             }
         }
 
-        // File input change event
         imageUpload.addEventListener("change", function (event) {
             handleFile(event.target.files[0]);
         });
 
-        // Drag and drop events
         dropArea.addEventListener("dragover", (event) => {
             event.preventDefault();
             dropArea.classList.add("drag-over");
@@ -393,13 +548,13 @@
                 const product = products[i];
                 const productDiv = document.createElement('div');
                 productDiv.innerHTML = `
-                            <a href="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Product-Details/${product.Sku}" style="text-decoration: none; color: inherit;">
-                                <img src="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Portals/0/Hotcakes/Data/products/${product.Bvin}/medium/${product.ImageFileMedium}" alt="${product.ProductName}" onerror="this.src='https://via.placeholder.com/150';" />
-                                <h3>${product.ProductName}</h3>
-                                <p class="price">${product.SitePrice.toFixed(2)} Ft</p>
-                                <p class="sku">Cikkszám: ${product.Sku}</p>
-                            </a>
-                        `;
+                        <a href="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Product-Details/${product.Sku}" style="text-decoration: none; color: inherit;">
+                            <img src="http://rendfejl1003.northeurope.cloudapp.azure.com:8080/Portals/0/Hotcakes/Data/products/${product.Bvin}/medium/${product.ImageFileMedium}" alt="${product.ProductName}" onerror="this.src='https://via.placeholder.com/150';" />
+                            <h3>${product.ProductName}</h3>
+                            <p class="price">${product.SitePrice.toFixed(2)} Ft</p>
+                            <p class="sku">Cikkszám: ${product.Sku}</p>
+                        </a>
+                    `;
                 productGrid.appendChild(productDiv);
             }
 
@@ -447,33 +602,36 @@
                     pageInfo.textContent = '';
 
                     let labels = (data.categories && data.categories.detected_labels) || data.detected_labels || [];
-
                     const labelList = labels.length > 0 ? `<p>🔍 Felismert címkék: ${labels.join(', ')}</p>` : '';
 
                     if (data.error || (data.categories && data.categories.error)) {
                         resultDiv.innerHTML = `
-                <p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">
-                    ❌ ${data.error || data.categories.error}<br/>
-                    ${labelList}
-                </p>`;
+                                <p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">
+                                    ❌ ${data.error || data.categories.error}<br/>
+                                    ${labelList}
+                                </p>`;
                     } else if (Array.isArray(data.categories) && data.categories.length > 0) {
                         products = data.categories;
                         totalPages = Math.ceil(products.length / itemsPerPage);
                         currentPage = 1;
                         resultDiv.innerHTML = `
-                <p style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px;">
-                    ✅ ${products.length} termék található.<br/>
-                    ${labelList}
-                </p>`;
+                                <p style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px;">
+                                    ✅ ${products.length} termék található.<br/>
+                                    ${labelList}
+                                </p>`;
                         renderProducts();
                     } else {
                         resultDiv.innerHTML = `
-                <p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">
-                    ❌ Nem található megfelelő termék.<br/>
-                    ${labelList}
-                </p>`;
+                                <p style="background-color: #f8d7da; color: #721 UEFA Champions League; padding: 10px; border-radius: 5px;">
+                                    ❌ Nem található megfelelő termék.<br/>
+                                    ${labelList}
+                                </p>`;
                     }
                 })
+                .catch(error => {
+                    console.error('Error:', error);
+                    resultDiv.innerHTML = `<p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">❌ Hiba történt az elemzés során.</p>`;
+                });
         });
 
         // Slot Machine Script
@@ -497,16 +655,14 @@
 
             function animateReel(reelInner, delay) {
                 let position = 0;
-                const speed = 50; // ms per frame
-                const totalDuration = 2000 + delay; // Base duration + stagger
+                const speed = 50;
                 const interval = setInterval(() => {
-                    position -= 100; // Move up by one symbol height
+                    position -= 100;
                     reelInner.style.transform = `translateY(${position}px)`;
                     reelInner.textContent = animals[Math.floor(Math.random() * animals.length)];
                     currentSpin++;
                     if (currentSpin >= spins) {
                         clearInterval(interval);
-                        // Snap to final position
                         reelInner.style.transition = 'transform 0.3s ease-out';
                         reelInner.style.transform = 'translateY(0)';
                         setTimeout(() => {
@@ -521,7 +677,6 @@
                 }, speed);
             }
 
-            // Stagger the reels for a more realistic effect
             animateReel(reel1Inner, 0);
             animateReel(reel2Inner, 200);
             animateReel(reel3Inner, 400);
@@ -536,5 +691,159 @@
         }
 
         spinBtn.addEventListener("click", spinReels);
+
+        // Blackjack Script
+        const dealerHand = document.getElementById("dealer-hand");
+        const playerHand = document.getElementById("player-hand");
+        const hitBtn = document.getElementById("hit-btn");
+        const standBtn = document.getElementById("stand-btn");
+        const newGameBtn = document.getElementById("new-game-btn");
+        const blackjackResult = document.getElementById("blackjack-result");
+        const playerScoreEl = document.getElementById("player-score");
+        const dealerScoreEl = document.getElementById("dealer-score");
+
+        let deck = [];
+        let playerCards = [];
+        let dealerCards = [];
+        let gameActive = false;
+
+        const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        const suitSymbols = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
+
+        function createDeck() {
+            deck = [];
+            for (let suit of suits) {
+                for (let value of values) {
+                    deck.push({ suit, value });
+                }
+            }
+            deck = deck.sort(() => Math.random() - 0.5);
+        }
+
+        function getCardValue(card) {
+            if (['J', 'Q', 'K'].includes(card.value)) return 10;
+            if (card.value === 'A') return 11;
+            return parseInt(card.value);
+        }
+
+        function calculateScore(cards) {
+            let score = 0;
+            let aces = 0;
+            for (let card of cards) {
+                if (card.value === 'A') aces++;
+                score += getCardValue(card);
+            }
+            while (score > 21 && aces > 0) {
+                score -= 10;
+                aces--;
+            }
+            return score;
+        }
+
+        function renderCard(card, container, isHidden = false) {
+            const cardEl = document.createElement('div');
+            cardEl.className = `card ${card.suit} ${isHidden ? 'back' : ''}`;
+            if (!isHidden) {
+                cardEl.innerHTML = `
+                        <span class="suit top-left">${suitSymbols[card.suit]}</span>
+                        <span>${card.value}</span>
+                        <span class="suit bottom-right">${suitSymbols[card.suit]}</span>
+                    `;
+            }
+            cardEl.classList.add('deal');
+            container.appendChild(cardEl);
+            setTimeout(() => {
+                cardEl.classList.remove('deal');
+                cardEl.classList.add('reveal');
+            }, 100);
+        }
+
+        function updateScores() {
+            playerScoreEl.textContent = `Játékos pont: ${calculateScore(playerCards)}`;
+            dealerScoreEl.textContent = gameActive ? 'Osztó pont: ?' : `Osztó pont: ${calculateScore(dealerCards)}`;
+        }
+
+        function startGame() {
+            createDeck();
+            playerCards = [deck.pop(), deck.pop()];
+            dealerCards = [deck.pop(), deck.pop()];
+            gameActive = true;
+            hitBtn.disabled = false;
+            standBtn.disabled = false;
+            newGameBtn.disabled = true;
+            blackjackResult.innerHTML = '';
+
+            dealerHand.innerHTML = '';
+            playerHand.innerHTML = '';
+
+            renderCard(dealerCards[0], dealerHand);
+            renderCard(dealerCards[1], dealerHand, true);
+            renderCard(playerCards[0], playerHand);
+            renderCard(playerCards[1], playerHand);
+
+            updateScores();
+
+            if (calculateScore(playerCards) === 21) {
+                endGame('Játékos Blackjack! Nyertél! 🎉');
+            }
+        }
+
+        function hit(event) {
+            event.preventDefault();
+            if (!gameActive) return;
+            playerCards.push(deck.pop());
+            renderCard(playerCards[playerCards.length - 1], playerHand);
+            updateScores();
+            if (calculateScore(playerCards) > 21) {
+                endGame('Túlmentél! Az osztó nyert. 😔');
+            }
+        }
+
+        function stand(event) {
+            event.preventDefault();
+            if (!gameActive) return;
+            gameActive = false;
+            hitBtn.disabled = true;
+            standBtn.disabled = true;
+            newGameBtn.disabled = false;
+
+            dealerHand.innerHTML = '';
+            dealerCards.forEach(card => renderCard(card, dealerHand));
+
+            while (calculateScore(dealerCards) < 17) {
+                dealerCards.push(deck.pop());
+                renderCard(dealerCards[dealerCards.length - 1], dealerHand);
+            }
+
+            updateScores();
+            const playerScore = calculateScore(playerCards);
+            const dealerScore = calculateScore(dealerCards);
+
+            if (dealerScore > 21) {
+                endGame('Az osztó túlment! Nyertél! 🎉');
+            } else if (playerScore > dealerScore) {
+                endGame('Nyertél! 🎉');
+            } else if (dealerScore > playerScore) {
+                endGame('Az osztó nyert. 😔');
+            } else {
+                endGame('Döntetlen! 🤝');
+            }
+        }
+
+        function endGame(message) {
+            gameActive = false;
+            hitBtn.disabled = true;
+            standBtn.disabled = true;
+            newGameBtn.disabled = false;
+            blackjackResult.innerHTML = `<p style="background-color: ${message.includes('Nyertél') ? '#d4edda' : '#f8d7da'}; color: ${message.includes('Nyertél') ? '#155724' : '#721c24'}; padding: 10px; border-radius: 5px;">${message}</p>`;
+        }
+
+        hitBtn.addEventListener('click', hit);
+        standBtn.addEventListener('click', stand);
+        newGameBtn.addEventListener('click', startGame);
+
+        // Start initial game
+        startGame();
     </script>
 }
