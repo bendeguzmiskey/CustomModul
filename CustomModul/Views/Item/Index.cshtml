@@ -192,7 +192,6 @@
         color: #333;
     }
 
-
     /* Slot machine styles */
     #slot-machine {
         margin-top: 40px;
@@ -291,47 +290,7 @@
         margin: 0;
     }
 
-
-    /* Blackjack styles */
-    #blackjack {
-        margin-top: 40px;
-        padding: 20px;
-        background: linear-gradient(145deg, #e0e0e0, #ffffff);
-        border-radius: 15px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        border: 4px solid #470000;
-        position: relative;
-    }
-
-    #blackjack::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 20px;
-        background: linear-gradient(to bottom, #470000, #6c0000);
-    }
-
-    #blackjack::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 20px;
-        background: linear-gradient(to top, #470000, #6c0000);
-    }
-
-    #dealer-hand, #player-hand {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin: 20px 0;
-        min-height: 120px;
-    }
-
+    /* Blackjack and High-Low shared card styles */
     .card {
         width: 80px;
         height: 120px;
@@ -387,6 +346,46 @@
         color: #000;
     }
 
+    /* Blackjack styles */
+    #blackjack {
+        margin-top: 40px;
+        padding: 20px;
+        background: linear-gradient(145deg, #e0e0e0, #ffffff);
+        border-radius: 15px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        border: 4px solid #470000;
+        position: relative;
+    }
+
+    #blackjack::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to bottom, #470000, #6c0000);
+    }
+
+    #blackjack::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to top, #470000, #6c0000);
+    }
+
+    #dealer-hand, #player-hand {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px 0;
+        min-height: 120px;
+    }
+
     #blackjack-controls {
         display: flex;
         justify-content: center;
@@ -434,6 +433,86 @@
         margin: 10px 0;
     }
 
+    /* High-Low Card Game styles */
+    #high-low {
+        margin-top: 40px;
+        padding: 20px;
+        background: linear-gradient(145deg, #e0e0e0, #ffffff);
+        border-radius: 15px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        border: 4px solid #470000;
+        position: relative;
+    }
+
+    #high-low::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to bottom, #470000, #6c0000);
+    }
+
+    #high-low::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(to top, #470000, #6c0000);
+    }
+
+    #current-card {
+        display: flex;
+        justify-content: center;
+        margin: 20px 0;
+        min-height: 120px;
+    }
+
+    #high-low-controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+    }
+
+    #higher-btn, #lower-btn, #new-highlow-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        border: none;
+        background: linear-gradient(to right, #ff8080, #ff4d4d);
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    #higher-btn:hover:not(:disabled), #lower-btn:hover:not(:disabled), #new-highlow-btn:hover:not(:disabled) {
+        background: linear-gradient(to right, #218838, #1e7e34);
+        transform: translateY(-2px);
+    }
+
+    #higher-btn:disabled, #lower-btn:disabled, #new-highlow-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    #high-low-result {
+        margin-top: 20px;
+        font-size: 18px;
+        padding: 10px;
+        border-radius: 5px;
+    }
+
+    #high-low-result p {
+        margin: 0;
+    }
+
     .badge {
         display: inline-block;
         padding: 0.25em 0.6em;
@@ -445,7 +524,6 @@
         border-radius: 0.25rem;
         user-select: none;
     }
-
 </style>
 
 <div id="Items-@Dnn.ModuleContext.ModuleId">
@@ -493,6 +571,18 @@
             <button id="new-game-btn">Új játék</button>
         </div>
         <div id="blackjack-result"></div>
+    </div>
+
+    <!-- High-Low Card Game -->
+    <div id="high-low">
+        <h2>Magas-Alacsony Kártyajáték</h2>
+        <div id="current-card"></div>
+        <div id="high-low-controls">
+            <button id="higher-btn" disabled>Magasabb</button>
+            <button id="lower-btn" disabled>Alacsonyabb</button>
+            <button id="new-highlow-btn">Új játék</button>
+        </div>
+        <div id="high-low-result"></div>
     </div>
 </div>
 
@@ -647,7 +737,6 @@
                     console.error('Error:', error);
                     resultDiv.innerHTML = `<p style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px;">❌ Hiba történt az elemzés során.</p>`;
                 });
-
         });
 
         // Slot Machine Script
@@ -859,7 +948,80 @@
         standBtn.addEventListener('click', stand);
         newGameBtn.addEventListener('click', startGame);
 
-        // Start initial game
+        // High-Low Card Game Script
+        const currentCardEl = document.getElementById("current-card");
+        const higherBtn = document.getElementById("higher-btn");
+        const lowerBtn = document.getElementById("lower-btn");
+        const newHighLowBtn = document.getElementById("new-highlow-btn");
+        const highLowResult = document.getElementById("high-low-result");
+
+        let highLowDeck = [];
+        let currentCard = null;
+        let highLowGameActive = false;
+
+        const highLowValues = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+        const valueToNumber = { 'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13 };
+
+        function createHighLowDeck() {
+            highLowDeck = [];
+            for (let suit of suits) {
+                for (let value of highLowValues) {
+                    highLowDeck.push({ suit, value });
+                }
+            }
+            highLowDeck = highLowDeck.sort(() => Math.random() - 0.5);
+        }
+
+        function startHighLowGame() {
+            createHighLowDeck();
+            currentCard = highLowDeck.pop();
+            highLowGameActive = true;
+            higherBtn.disabled = false;
+            lowerBtn.disabled = false;
+            newHighLowBtn.disabled = true;
+            highLowResult.innerHTML = '';
+            currentCardEl.innerHTML = '';
+            renderCard(currentCard, currentCardEl);
+        }
+
+        function guessHighLow(event, guess) {
+            event.preventDefault();
+            if (!highLowGameActive) return;
+            highLowGameActive = false;
+            higherBtn.disabled = true;
+            lowerBtn.disabled = true;
+            newHighLowBtn.disabled = false;
+
+            const nextCard = highLowDeck.pop();
+            const currentValue = valueToNumber[currentCard.value];
+            const nextValue = valueToNumber[nextCard.value];
+
+            currentCardEl.innerHTML = '';
+            renderCard(nextCard, currentCardEl);
+
+            let message;
+            if (nextValue === currentValue) {
+                message = `Döntetlen! A kártya ugyanaz: ${nextCard.value} 🤝`;
+            } else if ((guess === 'higher' && nextValue > currentValue) || (guess === 'lower' && nextValue < currentValue)) {
+                message = 'Jól tippeltél! 🎉';
+            } else {
+                message = 'Rossz tipp! 😔';
+            }
+
+            highLowResult.innerHTML = `<p style="background-color: ${message.includes('Jól') ? '#d4edda' : '#f8d7da'}; color: ${message.includes('Jól') ? '#155724' : '#721c24'}; padding: 10px; border-radius: 5px;">${message}</p>`;
+            currentCard = nextCard;
+
+            if (highLowDeck.length === 0) {
+                createHighLowDeck();
+            }
+        }
+
+        higherBtn.addEventListener('click', (event) => guessHighLow(event, 'higher'));
+        lowerBtn.addEventListener('click', (event) => guessHighLow(event, 'lower'));
+        newHighLowBtn.addEventListener('click', startHighLowGame);
+
+        // Start initial games
         startGame();
+        startHighLowGame();
     </script>
 }
